@@ -3,6 +3,8 @@ use std::{fmt::Display, fs::File, io::Read};
 const MASK: u16 = (1 << 15) - 1;
 const MOD: u16 = 1 << 15;
 
+const PRE_PROGRAMMED: &[u8] = include_bytes!("inputs.txt");
+
 #[derive(Debug)]
 enum Error {
     Halted,
@@ -94,7 +96,7 @@ impl TryFrom<u16> for Val {
 impl Display for Val {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Val::Literal(x) => write!(f, "%{}", *x),
+            Val::Literal(x) => write!(f, "{}", *x),
             Val::Reg(reg) => write!(f, "{}", reg),
         }
     }
@@ -209,22 +211,32 @@ impl Display for Op {
             Op::Set(a, b) => write!(f, "set	{},	{}", a, b),
             Op::Push(a) => write!(f, "push	{}", a),
             Op::Pop(a) => write!(f, "pop	{}", a),
-            Op::Eq(a, b, c) => write!(f, "eq	{},	{}	{}", a, b, c),
-            Op::Gt(a, b, c) => write!(f, "gt	{},	{}	{}", a, b, c),
+            Op::Eq(a, b, c) => write!(f, "eq	{},	{},	{}", a, b, c),
+            Op::Gt(a, b, c) => write!(f, "gt	{},	{},	{}", a, b, c),
             Op::Jmp(a) => write!(f, "jmp	{}", a),
             Op::Jt(a, b) => write!(f, "jt	{},	{}", a, b),
             Op::Jf(a, b) => write!(f, "jf	{},	{}", a, b),
-            Op::Add(a, b, c) => write!(f, "add	{},	{}	{}", a, b, c),
-            Op::Mult(a, b, c) => write!(f, "mult	{},	{}	{}", a, b, c),
-            Op::Mod(a, b, c) => write!(f, "mod	{},	{}	{}", a, b, c),
-            Op::And(a, b, c) => write!(f, "and	{},	{}	{}", a, b, c),
-            Op::Or(a, b, c) => write!(f, "or	{},	{}	{}", a, b, c),
+            Op::Add(a, b, c) => write!(f, "add	{},	{},	{}", a, b, c),
+            Op::Mult(a, b, c) => write!(f, "mult	{},	{},	{}", a, b, c),
+            Op::Mod(a, b, c) => write!(f, "mod	{},	{},	{}", a, b, c),
+            Op::And(a, b, c) => write!(f, "and	{},	{},	{}", a, b, c),
+            Op::Or(a, b, c) => write!(f, "or	{},	{},	{}", a, b, c),
             Op::Not(a, b) => write!(f, "not	{},	{}", a, b),
             Op::Rmem(a, b) => write!(f, "rmem	{},	{}", a, b),
             Op::Wmem(a, b) => write!(f, "wmem	{},	{}", a, b),
             Op::Call(a) => write!(f, "call	{}", a),
             Op::Ret => write!(f, "ret"),
-            Op::Out(a) => write!(f, "out	{}", a),
+            Op::Out(a) => match &a {
+                Val::Literal(x) => {
+                    write!(
+                        f,
+                        "out	{}\t\t// {:?}",
+                        a,
+                        char::from_u32(*x as u32).unwrap()
+                    )
+                }
+                Val::Reg(_) => write!(f, "out	{}", a),
+            },
             Op::In(a) => write!(f, "in	{}", a),
             Op::Noop => write!(f, "noop"),
         }
@@ -237,6 +249,8 @@ struct Machine {
     stack: Vec<u16>,
     mem: Vec<u16>,
     mem_offset: usize,
+    /// Pre-programmed input index
+    pp: usize,
 }
 
 impl Machine {
@@ -364,12 +378,19 @@ impl Machine {
                 false
             }
             Op::In(a) => {
-                let mut b = [0u8; 1];
-                std::io::stdin()
-                    .lock()
-                    .read_exact(&mut b)
-                    .expect("failed to read input char");
-                self.set_lit(a, b[0] as u16);
+                if self.pp < PRE_PROGRAMMED.len() {
+                    let c = PRE_PROGRAMMED[self.pp];
+                    self.set_lit(a, c as u16);
+                    print!("{}", char::from_u32(c as u32).unwrap());
+                    self.pp += 1;
+                } else {
+                    let mut b = [0u8; 1];
+                    std::io::stdin()
+                        .lock()
+                        .read_exact(&mut b)
+                        .expect("failed to read input char");
+                    self.set_lit(a, b[0] as u16);
+                }
                 false
             }
             Op::Noop => false,
@@ -396,15 +417,58 @@ impl Machine {
     }
 }
 
-fn main() {
+fn decompile(mem: &[u16]) {
+    let mut offset = 0;
+    let mut in_data = false;
+    while offset < mem.len() {
+        let op = match Op::try_from(&mem[offset..]) {
+            Ok(op) => {
+                if in_data {
+                    println!("\n\n.ops:\n");
+                    in_data = false;
+                }
+                op
+            }
+            Err(_err) => {
+                if !in_data {
+                    in_data = true;
+                    println!("\n.data:\n");
+                }
+                print!("{}", ((mem[offset] >> 8) as u8).escape_ascii());
+                print!("{}", ((mem[offset] & 0xFF) as u8).escape_ascii());
+                offset += 1;
+                continue;
+            }
+        };
+        println!("\t\t{op}");
+        offset += 1 + op.arg_count();
+    }
+}
+
+fn load_mem() -> Vec<u16> {
     let mut f = File::open("./challenge.bin").unwrap();
     let mut rom_data: Vec<u8> = Vec::with_capacity(f.metadata().unwrap().len() as usize);
     f.read_to_end(&mut rom_data).unwrap();
     let (chunks, _) = rom_data.as_chunks::<2>();
-    let mem: Vec<u16> = chunks.iter().cloned().map(u16::from_le_bytes).collect();
-    let mut machine = Machine {
-        mem,
-        ..Default::default()
-    };
-    machine.run();
+    chunks.iter().cloned().map(u16::from_le_bytes).collect()
+}
+
+fn main() {
+    match std::env::args().nth(1) {
+        Some(s) => match s.as_str() {
+            "decompile" => {
+                let mem = load_mem();
+                decompile(&mem);
+            }
+            _ => println!("what"),
+        },
+        _ => {
+            let mem = load_mem();
+            let mut machine = Machine {
+                mem,
+                ..Default::default()
+            };
+            machine.run();
+        }
+    }
 }
