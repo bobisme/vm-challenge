@@ -4,6 +4,16 @@ use crate::error::Error;
 pub struct Reg(u8);
 
 impl Reg {
+    pub const REG0: Reg = Reg(0);
+    pub const REG1: Reg = Reg(1);
+    pub const REG2: Reg = Reg(2);
+    pub const REG3: Reg = Reg(3);
+    pub const REG4: Reg = Reg(4);
+    pub const REG5: Reg = Reg(5);
+    pub const REG6: Reg = Reg(6);
+    pub const REG7: Reg = Reg(7);
+
+    #[inline(always)]
     pub fn index(&self) -> usize {
         self.0 as usize
     }

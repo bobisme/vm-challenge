@@ -71,9 +71,21 @@ impl Machine {
         self.set_lit(reg, self.val(val));
     }
 
+    /// Returns true/false whether the instruction jumped or not.
     fn apply(&mut self, op: Op) -> Result<bool, Error> {
         if let Some(trace) = &mut self.trace_file {
             writeln!(trace, "{op}").unwrap()
+        }
+        if self.mem_offset == 0x1587 {
+            println!("// START RECURSIVE FN");
+            println!("// REGISTERS: {:?}", self.registers);
+            println!("// CHEATING...");
+            self.set_lit(Reg::REG0, 6);
+            return Ok(false);
+        }
+        if self.mem_offset == 0x1589 {
+            println!("// CHECKING VAL");
+            println!("// REGISTERS: {:?}", self.registers);
         }
         let jumped = match op {
             Op::Halt => return Err(Error::Halted),
@@ -220,8 +232,7 @@ impl Machine {
                         if let Some(trace) = &mut self.trace_file {
                             writeln!(trace, ";; USING TELEPORTER").unwrap();
                         }
-                        // self.set_eighth_register(399);
-                        self.set_eighth_register(1);
+                        self.set_eighth_register(9947);
                     }
                     self.set_lit(a, b[0] as u16);
                 }

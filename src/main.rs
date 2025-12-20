@@ -13,6 +13,7 @@ pub mod machine;
 pub mod op;
 
 const PRE_PROGRAMMED: &[u8] = include_bytes!("inputs.txt");
+const MAX_U15: u16 = (1 << 15) - 1;
 
 #[derive(Clone, Debug)]
 enum Annotation {
@@ -128,6 +129,36 @@ fn decompile(mem: &[u16]) {
     }
 }
 
+fn calc_reg_8() {
+    /// Non-literal implementation of `recursive_function` with memoization.
+    /// See `./teleporter.py` for notes and derivation.
+    fn recfn(r0: u16, r1: u16, r7: u16, cache: &mut HashMap<(u16, u16), u16>) -> u16 {
+        let key = (r0, r1);
+        if cache.contains_key(&key) {
+            return *cache.get(&key).unwrap();
+        }
+        let res = if r0 == 0 {
+            (r1 + 1) % MAX_U15
+        } else if r1 == 0 {
+            recfn(r0 - 1, r7, r7, cache)
+        } else {
+            recfn(r0 - 1, recfn(r0, r1 - 1, r7, cache), r7, cache)
+        };
+        cache.insert(key, res);
+        res
+    }
+
+    for r7 in 0..=MAX_U15 {
+        print!("{r7}.");
+        let mut cache = HashMap::<(u16, u16), u16>::new();
+        if recfn(4, 1, r7, &mut cache) == 6 {
+            println!("FOUND r7 = {r7}");
+            return;
+        }
+    }
+    println!("NOTHING FOUND");
+}
+
 fn load_mem() -> Vec<u16> {
     let mut f = File::open("./challenge.bin").unwrap();
     let mut rom_data: Vec<u8> = Vec::with_capacity(f.metadata().unwrap().len() as usize);
@@ -143,13 +174,14 @@ fn main() {
                 let mem = load_mem();
                 decompile(&mem);
             }
+            "reg8" => calc_reg_8(),
             _ => println!("what"),
         },
         _ => {
             let mem = load_mem();
             let mut machine = Machine::new(mem);
             machine.set_script(PRE_PROGRAMMED);
-            machine.set_trace_out("run.trace");
+            // machine.set_trace_out("run.trace");
             machine.run();
         }
     }

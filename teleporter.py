@@ -1,35 +1,18 @@
-# Notes
+#!/usr/bin/env python
 
-## Codes Found
+from functools import cache
+import sys
 
-ImoFztWQCvxj // start
-BNCyODLfQkIl
-pWDWTEfURAdS
-rdMkyZhveeIv // found can
-JyDQhSbkpyns // use teleporter
-IgwnrPWuyRRN // hack the teleporter
+sys.setrecursionlimit(1_000_000)
 
-## Puzzles
+MAX_U15 = (1 << 15) - 1
 
-### Coins
 
-_+_ \* _^2 +_^3 - \_ = 399
-
-blue coin has 9 dots
-red coin has 2 dots
-shiny coin has a pentagon
-concave coin has 7 dots
-corroded coin has a triangle
-
-9 + 2 \* 5**2 + 7**3 - 3 = 399
-
-### Teleporter
-
-```python
 def recursive_function(r0: int, r1: int, r7: int):
     """
     Literal translation of assembly.
 
+    ```asm
     [0x17a1] jt     r0, 0x17a9            ; if r0 != 0, jump to r0_not_zero
     [0x17a4] add    r0, r1, 0x0001        ; r0 = r1 + 1
     [0x17a8] ret
@@ -48,6 +31,7 @@ def recursive_function(r0: int, r1: int, r7: int):
     [0x17c3] add    r0, r0, 0x7fff        ; r0 -= 1
     [0x17c7] call   0x17a1                ; recursive_func(r0, r1), aka recursive_func(r0 -1, r1)
     [0x17c9] ret
+    ```
     """
     stack = []
 
@@ -80,13 +64,39 @@ def recursive_function(r0: int, r1: int, r7: int):
 
     main()
     return r0
-```
 
-```python
+
+@cache
+def recfn(r0: int, r1: int, r7: int) -> int:
+    """
+    Non-literal implementation of `recursive_function` with memoization.
+    """
+    if r0 == 0:
+        return (r1 + 1) % MAX_U15
+    if r1 == 0:
+        return recfn(r0 - 1, r7, r7)
+    r1 = recfn(r0, r1 - 1, r7)
+    return recfn(r0 - 1, r1, r7)
+
+
+def assert_eq(a, b):
+    assert a == b, f"{a} != {b}"
+
+
+assert_eq(recursive_function(0, 0, 0), recfn(0, 0, 0))
+assert_eq(recursive_function(0, 0, 1), recfn(0, 0, 1))
+assert_eq(recursive_function(0, 1, 1), recfn(0, 1, 1))
+assert_eq(recursive_function(1, 1, 1), recfn(1, 1, 1))
+assert_eq(recursive_function(1, 2, 1), recfn(1, 2, 1))
+assert_eq(recursive_function(2, 2, 1), recfn(2, 2, 1))
+assert_eq(recfn(4, 1, 9946), 6)
+
+
 def brute_force():
     """
     NOTE: this causes a stack overflow.
 
+    ```asm
     [0x1581] set    r0, 0x0004
     [0x1584] set    r1, 0x0001
     [0x1587] call   0x17a1                ; recursive_func(4, 1)
@@ -99,14 +109,13 @@ def brute_force():
     [0x1599] set    r1, 0x0611            ;   r1 = 0x0611
     [0x159c] add    r2, 0x1f73, 0x3a78    ;   r2 = 0x59eb
     [0x15a0] call   0x05c8                ;   0x05c8(r0, r1, r2)
+    ```
     """
     for r7 in range(1, (1 << 15) - 1):
         print(f"testing r7 = {r7}")
         out = recfn(4, 1, r7)
         if out == 6:
             return r7
-```
 
-See ./teleporter.py for details. It wouldn't run, so it was rewritten in ./src/main.rs.
 
-FOUND r7 = 9946
+# print(f"got {brute_force()}")
