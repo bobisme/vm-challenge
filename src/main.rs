@@ -1,5 +1,6 @@
 use std::{
     collections::HashMap,
+    fmt::Write,
     fs::File,
     io::{BufRead, BufReader, Read},
     path::Path,
@@ -84,6 +85,7 @@ fn decompile(mem: &[u16]) {
     while addr < mem.len() {
         match crate::op::Op::try_from(&mem[addr..]) {
             Ok(op) => {
+                let mut out_line = String::new();
                 if in_data {
                     // println!("\n\nops:");
                     println!("\n");
@@ -97,16 +99,18 @@ fn decompile(mem: &[u16]) {
                         }
                     })
                 }
-                print!("/* 0x{addr:04x} */\t{op}");
+                write!(out_line, "/* 0x{addr:04x} */ {op}").unwrap();
                 if let Some(list) = addr_annos {
                     list.iter().for_each(|a| {
                         if let Annotation::Comment(text) = a {
-                            println!("\t\t\t; {text}");
+                            for _ in out_line.len()..40 {
+                                write!(out_line, " ").unwrap();
+                            }
+                            write!(out_line, "; {text}").unwrap();
                         }
                     })
-                } else {
-                    println!();
                 }
+                println!("{out_line}");
                 addr += 1 + op.arg_count();
             }
             Err(_err) => {
