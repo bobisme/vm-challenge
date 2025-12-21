@@ -5,7 +5,7 @@ import sys
 
 sys.setrecursionlimit(1_000_000)
 
-MAX_U15 = (1 << 15) - 1
+MOD = 1 << 15
 
 
 def recursive_function(r0: int, r1: int, r7: int):
@@ -40,7 +40,7 @@ def recursive_function(r0: int, r1: int, r7: int):
         if r0 != 0:
             r0_not_zero()
         else:
-            r0 = (r1 + 1) % MAX_U15
+            r0 = (r1 + 1) % MOD
             return r0
 
     def r0_not_zero():
@@ -72,7 +72,7 @@ def recfn(r0: int, r1: int, r7: int) -> int:
     Non-literal implementation of `recursive_function` with memoization.
     """
     if r0 == 0:
-        return (r1 + 1) % MAX_U15
+        return (r1 + 1) % MOD
     if r1 == 0:
         return recfn(r0 - 1, r7, r7)
     r1 = recfn(r0, r1 - 1, r7)
@@ -89,7 +89,6 @@ assert_eq(recursive_function(0, 1, 1), recfn(0, 1, 1))
 assert_eq(recursive_function(1, 1, 1), recfn(1, 1, 1))
 assert_eq(recursive_function(1, 2, 1), recfn(1, 2, 1))
 assert_eq(recursive_function(2, 2, 1), recfn(2, 2, 1))
-assert_eq(recfn(4, 1, 9946), 6)
 
 
 def brute_force():

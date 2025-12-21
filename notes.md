@@ -7,7 +7,8 @@ BNCyODLfQkIl
 pWDWTEfURAdS
 rdMkyZhveeIv // found can
 JyDQhSbkpyns // use teleporter
-IgwnrPWuyRRN // hack the teleporter
+JhxmqOXvzQQM // teleport to beach NOT VALID!?
+qo8HqHOwU8Wi // access the vault
 
 ## Puzzles
 
@@ -109,4 +110,21 @@ def brute_force():
 
 See ./teleporter.py for details. It wouldn't run, so it was rewritten in ./src/main.rs.
 
-FOUND r7 = 9946
+FOUND r7 = 25734 // originally had 9946 because I was modding by 2^16 - 1 instead of 2^16. Found after checking all the codes.
+
+Needed to set r7 and bypass the call to the recursive function to teleport correctly.
+
+### The orb
+
+```
+ *  8  -  1 30 & hourglass
+ 4  * 11  *
+ +  4  - 18
+22  -  9  *
+```
+
+See ./orb.py for solution.
+
+iW8UwOHpH8op // not valid... but it's in a mirror
+po8HpHOwU8Wi // is the reverse, but it's not valid either...
+qo8HqHOwU8Wi // if I flip the p's to q's WORKS

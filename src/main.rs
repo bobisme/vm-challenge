@@ -2,18 +2,18 @@ use std::{
     collections::HashMap,
     fmt::Write,
     fs::File,
-    io::{BufRead, BufReader, Read},
+    io::{BufRead, BufReader},
     path::Path,
+    rc::Rc,
 };
 
-use crate::machine::Machine;
+use crate::machine::{MAX_U15, MOD, Machine};
 
 pub mod error;
 pub mod machine;
 pub mod op;
 
-const PRE_PROGRAMMED: &[u8] = include_bytes!("inputs.txt");
-const MAX_U15: u16 = (1 << 15) - 1;
+const BIN_PATH: &str = "challenge.bin";
 
 #[derive(Clone, Debug)]
 enum Annotation {
@@ -138,7 +138,7 @@ fn calc_reg_8() {
             return *cache.get(&key).unwrap();
         }
         let res = if r0 == 0 {
-            (r1 + 1) % MAX_U15
+            (r1 + 1) % MOD
         } else if r1 == 0 {
             recfn(r0 - 1, r7, r7, cache)
         } else {
@@ -159,29 +159,38 @@ fn calc_reg_8() {
     println!("NOTHING FOUND");
 }
 
-fn load_mem() -> Vec<u16> {
-    let mut f = File::open("./challenge.bin").unwrap();
-    let mut rom_data: Vec<u8> = Vec::with_capacity(f.metadata().unwrap().len() as usize);
-    f.read_to_end(&mut rom_data).unwrap();
+fn load_mem(path: &Path) -> Vec<u16> {
+    let rom_data = std::fs::read(path).unwrap();
     let (chunks, _) = rom_data.as_chunks::<2>();
     chunks.iter().cloned().map(u16::from_le_bytes).collect()
 }
 
 fn main() {
-    match std::env::args().nth(1) {
-        Some(s) => match s.as_str() {
-            "decompile" => {
-                let mem = load_mem();
-                decompile(&mem);
-            }
-            "reg8" => calc_reg_8(),
-            _ => println!("what"),
-        },
+    let args: Rc<[String]> = std::env::args().skip(1).collect();
+    match args.get(1).map(|s| s.as_str()) {
+        Some("decompile") => {
+            let mem = load_mem(Path::new(BIN_PATH));
+            decompile(&mem);
+        }
+        Some("reg8") => calc_reg_8(),
         _ => {
-            let mem = load_mem();
+            let mem = load_mem(Path::new(BIN_PATH));
             let mut machine = Machine::new(mem);
-            machine.set_script(PRE_PROGRAMMED);
-            // machine.set_trace_out("run.trace");
+            if let Some((i, _)) = args
+                .iter()
+                .enumerate()
+                .find(|(_, x)| x.as_str() == "--script")
+            {
+                let script =
+                    std::fs::read(args.get(i + 1).expect("usage: --script <file>")).unwrap();
+                machine.set_script(&script);
+            }
+            if args.contains(&"--trace".to_owned()) {
+                machine.set_trace_out("run.trace");
+            }
+            if args.contains(&"--hack-teleporter".to_owned()) {
+                machine.hack_teleporter();
+            }
             machine.run();
         }
     }

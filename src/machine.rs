@@ -10,8 +10,8 @@ use crate::{
     op::{Op, Reg, Val},
 };
 
-const MASK: u16 = (1 << 15) - 1;
-const MOD: u16 = 1 << 15;
+pub const MAX_U15: u16 = (1 << 15) - 1;
+pub const MOD: u16 = 1 << 15;
 
 #[derive(Default)]
 pub struct Machine {
@@ -28,6 +28,8 @@ pub struct Machine {
     // Watch addresses
     watches: HashMap<u16, String>,
     input_log: String,
+    // Hack
+    should_hack_teleporter: bool,
 }
 
 impl Machine {
@@ -76,16 +78,12 @@ impl Machine {
         if let Some(trace) = &mut self.trace_file {
             writeln!(trace, "{op}").unwrap()
         }
-        if self.mem_offset == 0x1587 {
-            println!("// START RECURSIVE FN");
-            println!("// REGISTERS: {:?}", self.registers);
-            println!("// CHEATING...");
+        if self.mem_offset == 0x1587 && self.should_hack_teleporter {
+            println!("// DETECTIVE RECURSIVE FN ADDR");
+            println!("// BYPASSING...");
             self.set_lit(Reg::REG0, 6);
+            self.set_lit(Reg::REG7, 25734);
             return Ok(false);
-        }
-        if self.mem_offset == 0x1589 {
-            println!("// CHECKING VAL");
-            println!("// REGISTERS: {:?}", self.registers);
         }
         let jumped = match op {
             Op::Halt => return Err(Error::Halted),
@@ -159,7 +157,7 @@ impl Machine {
                 false
             }
             Op::Not(a, b) => {
-                self.set_lit(a, MASK ^ self.val(b));
+                self.set_lit(a, MAX_U15 ^ self.val(b));
                 false
             }
             Op::Rmem(a, b) => {
@@ -213,11 +211,13 @@ impl Machine {
                 false
             }
             Op::In(a) => {
-                if self.pp_idx < self.pp.len() {
+                let input = if self.pp_idx < self.pp.len() {
                     let c = self.pp[self.pp_idx];
-                    self.set_lit(a, c as u16);
-                    print!("{}", char::from_u32(c as u32).unwrap());
+                    let ch = char::from_u32(c as u32).unwrap();
+                    print!("{}", ch);
+                    self.input_log.push(ch);
                     self.pp_idx += 1;
+                    c as u16
                 } else {
                     let mut b = [0u8; 1];
                     std::io::stdin()
@@ -225,17 +225,20 @@ impl Machine {
                         .read_exact(&mut b)
                         .expect("failed to read input char");
                     self.input_log.push(char::from_u32(b[0] as u32).unwrap());
-                    let code = "use teleporter\n";
-                    if self.input_log.len() >= code.len()
-                        && &self.input_log[(self.input_log.len() - code.len())..] == code
-                    {
-                        if let Some(trace) = &mut self.trace_file {
-                            writeln!(trace, ";; USING TELEPORTER").unwrap();
-                        }
-                        self.set_eighth_register(9947);
+                    b[0] as u16
+                };
+
+                let code = "use teleporter\n";
+                if self.input_log.len() >= code.len()
+                    && &self.input_log[(self.input_log.len() - code.len())..] == code
+                {
+                    if let Some(trace) = &mut self.trace_file {
+                        writeln!(trace, ";; USING TELEPORTER").unwrap();
                     }
-                    self.set_lit(a, b[0] as u16);
+                    self.set_lit(Reg::REG7, 9946);
                 }
+
+                self.set_lit(a, input);
                 false
             }
             Op::Noop => false,
@@ -290,5 +293,9 @@ impl Machine {
 
     pub fn set_eighth_register(&mut self, val: u16) {
         self.registers[7] = val;
+    }
+
+    pub fn hack_teleporter(&mut self) {
+        self.should_hack_teleporter = !self.should_hack_teleporter;
     }
 }
