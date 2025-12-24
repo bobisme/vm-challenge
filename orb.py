@@ -137,7 +137,10 @@ def search():
                 # looks like we can backtrack, but not to the start
                 if val_pos == START:
                     continue
-                n = Node(val_pos, op_path, op(node.val, at(val_pos)))
+                val = op(node.val, at(val_pos))
+                if val < 0:  # negative values cause the orb to shatter
+                    continue
+                n = Node(val_pos, op_path, val)
                 heapq.heappush(q, n)
 
 
@@ -149,8 +152,7 @@ def main():
 
     path = search()
     if path:
-        print(path)
-        print("PATH FOUND:\n\n")
+        print("PATH FOUND:\n")
         print_path(path)
 
 
