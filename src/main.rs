@@ -189,6 +189,7 @@ fn main() {
                 machine.set_trace_out("run.trace");
             }
             if args.contains(&"--hack-teleporter".to_owned()) {
+                println!("HACKS ENABLED");
                 machine.hack_teleporter();
             }
             machine.run();

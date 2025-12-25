@@ -2,13 +2,16 @@
 
 ## Codes Found
 
+LDOb7UGhTi // arch-spec
 ImoFztWQCvxj // start
-BNCyODLfQkIl
-pWDWTEfURAdS
+BNCyODLfQkIl // self test
+pWDWTEfURAdS // write on tablet
 rdMkyZhveeIv // found can
-JyDQhSbkpyns // use teleporter
-JhxmqOXvzQQM // teleport to beach NOT VALID!?
-qo8HqHOwU8Wi // access the vault
+JyDQhSbkpyns // use teleporter first time
+NBlOWKLbTMgY // teleport to beach
+qo8HqHOwU8Wi // look in the mirror
+
+~~JhxmqOXvzQQM~~ // teleport to beach NOT VALID!?
 
 ## Puzzles
 

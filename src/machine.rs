@@ -12,6 +12,7 @@ use crate::{
 
 pub const MAX_U15: u16 = (1 << 15) - 1;
 pub const MOD: u16 = 1 << 15;
+pub const R7_VAL: u16 = 25734;
 
 #[derive(Default)]
 pub struct Machine {
@@ -82,7 +83,6 @@ impl Machine {
             println!("// DETECTIVE RECURSIVE FN ADDR");
             println!("// BYPASSING...");
             self.set_lit(Reg::REG0, 6);
-            self.set_lit(Reg::REG7, 25734);
             return Ok(false);
         }
         let jumped = match op {
@@ -235,7 +235,9 @@ impl Machine {
                     if let Some(trace) = &mut self.trace_file {
                         writeln!(trace, ";; USING TELEPORTER").unwrap();
                     }
-                    self.set_lit(Reg::REG7, 9946);
+                    if self.should_hack_teleporter {
+                    self.set_lit(Reg::REG7, R7_VAL);
+                    }
                 }
 
                 self.set_lit(a, input);
