@@ -2,8 +2,10 @@
 
 from functools import cache
 import sys
+import threading
 
 sys.setrecursionlimit(1_000_000)
+threading.stack_size(64 * 1024 * 1024)
 
 MOD = 1 << 15
 
@@ -114,7 +116,11 @@ def brute_force():
         print(f"testing r7 = {r7}")
         out = recfn(4, 1, r7)
         if out == 6:
+            print(f"got {r7=}")
             return r7
 
 
-# print(f"got {brute_force()}")
+if __name__ == "__main__":
+    t = threading.Thread(target=brute_force)
+    t.start()
+    t.join()

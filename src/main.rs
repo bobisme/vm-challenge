@@ -167,13 +167,13 @@ fn load_mem(path: &Path) -> Vec<u16> {
 
 fn main() {
     let args: Rc<[String]> = std::env::args().skip(1).collect();
-    match args.get(1).map(|s| s.as_str()) {
+    match args.first().map(|s| s.as_str()) {
         Some("decompile") => {
             let mem = load_mem(Path::new(BIN_PATH));
             decompile(&mem);
         }
         Some("reg8") => calc_reg_8(),
-        _ => {
+        None | Some("run") => {
             let mem = load_mem(Path::new(BIN_PATH));
             let mut machine = Machine::new(mem);
             if let Some((i, _)) = args
@@ -194,5 +194,6 @@ fn main() {
             }
             machine.run();
         }
+        Some(cmd) => println!("Unknown command: {cmd}"),
     }
 }
