@@ -81,6 +81,37 @@ def recfn(r0: int, r1: int, r7: int) -> int:
     return recfn(r0 - 1, r1, r7)
 
 
+def ack(r0: int, r1: int, r7: int) -> int:
+    """
+    Came back after solving to play with the actual Ackermann function.
+    Worked out the closed forms while watching stewSquared on stream.
+    Got (1, n) from Stew.
+    Worked out the (2, n) by hand.
+    Found (3, n) using sympy (see `sympy_solve` below()).
+    Was able to completely remove memoization.
+    """
+
+    match (r0, r1):
+        case (0, n):
+            out = n + 1
+        case (3, 0):
+            out = r7 * (r7 + 2) + r7 + 1
+        case (m, 0):
+            out = ack(m - 1, r7, r7)
+        case (1, n):
+            out = r7 + n + 1
+        case (2, n):
+            out = r7 * (n + 2) + n + 1
+        case (3, n):
+            out = (
+                -2 * r7 + ((r7 + 1) ** n) * (r7**3 + 3 * r7**2 + 3 * r7 + 1) - 1
+            ) // r7
+        case (m, n):
+            out = ack(m - 1, ack(m, n - 1, r7), r7)
+
+    return out % MOD
+
+
 def assert_eq(a, b):
     assert a == b, f"{a} != {b}"
 
@@ -91,6 +122,11 @@ assert_eq(recursive_function(0, 1, 1), recfn(0, 1, 1))
 assert_eq(recursive_function(1, 1, 1), recfn(1, 1, 1))
 assert_eq(recursive_function(1, 2, 1), recfn(1, 2, 1))
 assert_eq(recursive_function(2, 2, 1), recfn(2, 2, 1))
+
+for r0 in range(1, 3):
+    for r1 in range(1, 6):
+        for r7 in range(1, 10):
+            assert_eq(x := recfn(r0, r1, r7), ack(r0, r1, r7))
 
 
 def brute_force():
@@ -114,13 +150,39 @@ def brute_force():
     """
     for r7 in range(1, (1 << 15) - 1):
         print(f"testing r7 = {r7}")
-        out = recfn(4, 1, r7)
+        # out = recfn(4, 1, r7)
+        out = ack(4, 1, r7)
         if out == 6:
             print(f"got {r7=}")
             return r7
 
 
+def sympy_solve():
+    """
+    Solving for (3, n) case.
+    """
+    import sympy
+
+    n = sympy.Symbol("n", integer=True, nonnegative=True)
+    r7 = sympy.Symbol("r_7", integer=True, nonnegative=True)
+    A = sympy.Function("A")
+
+    # A(3, n) = ack(2, ack(3, n - 1))
+    # A(2, n) = r7 * (n + 2) + n + 1
+    # A(3, n) = r7 * (ack(3, n-1) + 2) + ack(3, n-1) + 1
+    # A(3, n) = (r7 + 1) * ack(3, n-1) + 2*r7  + 1
+    # A(3, 0) = r7 * (r7 + 2) + r7 + 1
+    # A(3, 0) = r7^2 + 3*r7 + 1
+    recurrence = sympy.Eq(A(n), (r7 + 1) * A(n - 1) + 2 * r7 + 1)
+    # Case for (3, n=0) => r_7^2 + 3*r_7 + 1
+    A_0 = r7**2 + 3 * r7 + 1
+    solution = sympy.rsolve(recurrence, A(n), {A(0): A_0})
+    assert isinstance(solution, sympy.Expr)
+    return sympy.simplify(solution)
+
+
 if __name__ == "__main__":
-    t = threading.Thread(target=brute_force)
-    t.start()
-    t.join()
+    brute_force()
+    # t = threading.Thread(target=brute_force)
+    # t.start()
+    # t.join()

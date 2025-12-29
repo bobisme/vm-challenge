@@ -132,26 +132,40 @@ fn decompile(mem: &[u16]) {
 fn calc_reg_8() {
     /// Non-literal implementation of `recursive_function` with memoization.
     /// See `./teleporter.py` for notes and derivation.
-    fn recfn(r0: u16, r1: u16, r7: u16, cache: &mut HashMap<(u16, u16), u16>) -> u16 {
-        let key = (r0, r1);
-        if cache.contains_key(&key) {
-            return *cache.get(&key).unwrap();
+    fn recfn(r0: u16, r1: u16, r7: u16) -> u16 {
+        match (r0, r1) {
+            (0, n) => (n + 1).rem_euclid(MOD),
+            (m, 0) => recfn(m - 1, r7, r7),
+            (1, n) => (r7 + n + 1).rem_euclid(MOD),
+            (2, n) => (r7 * (n + 2) + n + 1).rem_euclid(MOD),
+            (3, n) => {
+                //                 n ⎛  3       2           ⎞
+                // -2⋅r₇ + (r₇ + 1) ⋅⎝r₇  + 3⋅r₇  + 3⋅r₇ + 1⎠ - 1
+                // ──────────────────────────────────────────────
+                //                       r₇
+                //
+                // Base case for recurrence:
+                // A(2, n, r7) = r7 * (n + 2) + n + 1
+                // A(3, n, r7) = ack(2, ack(3, n - 1))
+                //             = r7 * (ack(3, n-1) + 2) + ack(3, n-1) + 1
+                //             = (r7 + 1) * ack(3, n-1) + 2*r7  + 1
+                // A(3, 0, r7) = r7 * (r7 + 2) + r7 + 1
+                //             = r7^2 + 3*r7 + 1
+                let base = (r7 * r7 + 3 * r7 + 1).rem_euclid(MOD);
+                // Recurrence coefficients:
+                // A(2, x, r7) = r7*(x + 2) + x + 1
+                //             = (r7 + 1)*x + (2*r7 + 1)
+                let mul = (r7 + 1).rem_euclid(MOD);
+                let add = (2 * r7 + 1).rem_euclid(MOD);
+                // instead of (k + 1)^n, do it in n steps
+                (0..n).fold(base, |acc, _| (mul * acc + add).rem_euclid(MOD))
+            }
+            (m, n) => recfn(m - 1, recfn(m, n - 1, r7), r7),
         }
-        let res = if r0 == 0 {
-            (r1 + 1) % MOD
-        } else if r1 == 0 {
-            recfn(r0 - 1, r7, r7, cache)
-        } else {
-            recfn(r0 - 1, recfn(r0, r1 - 1, r7, cache), r7, cache)
-        };
-        cache.insert(key, res);
-        res
     }
 
-    for r7 in 0..=MAX_U15 {
-        print!("{r7}.");
-        let mut cache = HashMap::<(u16, u16), u16>::new();
-        if recfn(4, 1, r7, &mut cache) == 6 {
+    for r7 in 1..=MAX_U15 {
+        if recfn(4, 1, r7) == 6 {
             println!("FOUND r7 = {r7}");
             return;
         }

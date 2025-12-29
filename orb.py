@@ -102,7 +102,7 @@ def print_path(path: list[Pos]):
 
 
 def search():
-    @dataclass
+    @dataclass(slots=True)
     class Node:
         pos: Pos
         prev_path: list[Pos]
