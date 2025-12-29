@@ -2,30 +2,29 @@
 
 ## Codes Found
 
-LDOb7UGhTi // arch-spec
-ImoFztWQCvxj // start
-BNCyODLfQkIl // self test
-pWDWTEfURAdS // write on tablet
-rdMkyZhveeIv // found can
-JyDQhSbkpyns // use teleporter first time
-NBlOWKLbTMgY // teleport to beach
-qo8HqHOwU8Wi // look in the mirror
-
-~~JhxmqOXvzQQM~~ // teleport to beach NOT VALID!?
+- LDOb7UGhTi // arch-spec
+- ImoFztWQCvxj // start
+- BNCyODLfQkIl // self test
+- pWDWTEfURAdS // write on tablet
+- rdMkyZhveeIv // found can
+- JyDQhSbkpyns // use teleporter first time
+- NBlOWKLbTMgY // teleport to beach
+- qo8HqHOwU8Wi // look in the mirror
+- ~~JhxmqOXvzQQM~~ // teleport to beach NOT VALID!?
 
 ## Puzzles
 
 ### Coins
 
-_+_ \* _^2 +_^3 - \_ = 399
+$$_+_ \* _^2 +_^3 - \_ = 399$$
 
-blue coin has 9 dots
-red coin has 2 dots
-shiny coin has a pentagon
-concave coin has 7 dots
-corroded coin has a triangle
+- blue coin has 9 dots
+- red coin has 2 dots
+- shiny coin has a pentagon
+- concave coin has 7 dots
+- corroded coin has a triangle
 
-9 + 2 \* 5**2 + 7**3 - 3 = 399
+$$9 + 2 \* 5**2 + 7**3 - 3 = 399$$
 
 ### Teleporter
 
@@ -128,6 +127,11 @@ Needed to set r7 and bypass the call to the recursive function to teleport corre
 
 See ./orb.py for solution.
 
-iW8UwOHpH8op // not valid... but it's in a mirror
-po8HpHOwU8Wi // is the reverse, but it's not valid either...
-qo8HqHOwU8Wi // if I flip the p's to q's WORKS
+- iW8UwOHpH8op // not valid... but it's in a mirror
+- po8HpHOwU8Wi // is the reverse, but it's not valid either...
+- qo8HqHOwU8Wi // if I flip the p's to q's WORKS
+
+### The Ackermann function
+
+Came back later and removed the cache and implemented closed forms for
+recursive function branches (see teleporter.py).
