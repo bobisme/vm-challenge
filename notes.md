@@ -16,7 +16,7 @@
 
 ### Coins
 
-$$_+_ \* _^2 +_^3 - \_ = 399$$
+$$a+b * c^2 + d^3 - e = 399$$
 
 - blue coin has 9 dots
 - red coin has 2 dots
@@ -24,7 +24,7 @@ $$_+_ \* _^2 +_^3 - \_ = 399$$
 - concave coin has 7 dots
 - corroded coin has a triangle
 
-$$9 + 2 \* 5**2 + 7**3 - 3 = 399$$
+$$9 + 2 * 5^2 + 7^3 - 3 = 399$$
 
 ### Teleporter
 
