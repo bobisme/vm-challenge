@@ -24,9 +24,13 @@ $$a+b * c^2 + d^3 - e = 399$$
 - concave coin has 7 dots
 - corroded coin has a triangle
 
+Used z3.
+
 $$9 + 2 * 5^2 + 7^3 - 3 = 399$$
 
 ### Teleporter
+
+See [teleporter.py](./teleporter.py) for derivation and details.
 
 ```python
 def recursive_function(r0: int, r1: int, r7: int):
@@ -125,7 +129,7 @@ Needed to set r7 and bypass the call to the recursive function to teleport corre
 22  -  9  *
 ```
 
-See ./orb.py for solution.
+See [orb.py](./orb.py) for solution. A<sup>\*</sup>.
 
 - iW8UwOHpH8op // not valid... but it's in a mirror
 - po8HpHOwU8Wi // is the reverse, but it's not valid either...
